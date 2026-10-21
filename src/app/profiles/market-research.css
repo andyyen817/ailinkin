@@ -1,0 +1,9 @@
+.market-research{margin:24px 0;padding:20px;border:1px solid var(--border,#dbe2ea);border-radius:12px;min-width:0}
+.market-research button{margin:12px 12px 12px 0}.market-research select{margin-left:8px;padding:8px}
+.market-columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}.market-research article{padding:12px;border-bottom:1px solid var(--border,#dbe2ea)}
+.market-claim strong{color:var(--muted,#475569)}.market-research a,.market-research p{overflow-wrap:anywhere}
+.market-counts{display:flex;gap:16px;flex-wrap:wrap}.market-counts strong{display:block;font-size:24px}
+@media(max-width:760px){.market-columns{grid-template-columns:1fr}.market-research{padding:12px}.market-research select{max-width:100%}}
+.market-research article,.market-research details{overflow-wrap:anywhere}
+.market-research button{margin:6px 8px 6px 0;max-width:100%;white-space:normal}
+.market-research h5{margin-bottom:4px;color:#334155}

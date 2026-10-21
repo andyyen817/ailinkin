@@ -1,0 +1,15 @@
+.git
+.agents
+.codex
+.env*
+.runtime
+.cache
+.next
+node_modules
+output
+outputs
+工作交流
+evidence
+dist
+*.tsbuildinfo
+progress.txt

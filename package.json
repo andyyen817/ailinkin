@@ -1,0 +1,58 @@
+{
+  "name": "ai-linkedin-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0 <23 || >=24.0.0 <25"
+  },
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1 --port 3030",
+    "build": "prisma generate && next build && node scripts/prepare-standalone.mjs",
+    "start": "node scripts/start.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "db:generate": "prisma generate",
+    "db:validate": "prisma validate",
+    "taskctl": "python scripts/taskctl.py status"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.1127.0",
+    "@aws-sdk/s3-request-presigner": "3.1127.0",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "better-auth": "1.7.3",
+    "bullmq": "6.3.4",
+    "csv-parse": "7.0.2",
+    "csv-stringify": "6.8.3",
+    "exceljs": "4.4.0",
+    "ioredis": "6.0.0",
+    "mammoth": "1.13.0",
+    "next": "16.3.4",
+    "nodemailer": "10.0.0",
+    "pdfjs-dist": "6.4.299",
+    "pg": "8.23.0",
+    "playwright": "1.63.0-alpha-2026-08-31",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "server-only": "0.0.1",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@playwright/cli": "0.1.19",
+    "@types/node": "22.20.1",
+    "@types/nodemailer": "8.0.1",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@types/smtp-server": "3.5.13",
+    "dotenv": "17.4.2",
+    "embedded-postgres": "18.4.0-beta.17",
+    "esbuild": "0.28.2",
+    "prisma": "7.10.0",
+    "s3rver": "3.7.1",
+    "smtp-server": "3.19.8",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3"
+  }
+}

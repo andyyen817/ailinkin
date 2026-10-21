@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String       @id
+  name             String
+  email            String       @unique
+  emailVerified    Boolean      @default(false)
+  image            String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  twoFactorEnabled Boolean      @default(false)
+  platformRole     String       @default("user")
+  disabled         Boolean      @default(false)
+  sessions         Session[]
+  accounts         Account[]
+  twoFactors       TwoFactor[]
+  memberships      Membership[]
+  supportAccess    SupportGrant[] @relation("SupportAdmin")
+  supportApproved  SupportGrant[] @relation("SupportApprover")
+  jobs TenantJob[]
+  profileRevisions ProfileRevision[]
+
+  @@map("auth_user")
+}
+
+model Session {
+  id        String   @id
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("auth_session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("auth_account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("auth_verification")
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@map("auth_rate_limit")
+}
+
+model TwoFactor {
+  id          String  @id
+  secret      String
+  backupCodes String
+  userId      String
+  verified    Boolean @default(true)
+  failedVerificationCount Int @default(0)
+  lockedUntil DateTime?
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("auth_two_factor")
+}
+
+model Tenant {
+  id                      String       @id @default(uuid())
+  name                    String
+  status                  String       @default("active")
+  monthlyEnrichmentQuota  Int          @default(500)
+  memberLimit             Int          @default(5)
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+  memberships             Membership[]
+  invitations             Invitation[]
+  auditLogs               AuditLog[]
+  supportGrants           SupportGrant[]
+  pauseRequests           TenantPauseRequest[]
+  jobs TenantJob[]
+  exportFiles ExportFile[]
+  companyProfile CompanyProfile?
+  products Product[]
+  productFacts ProductFact[]
+  icps ICP[]
+  profileRevisions ProfileRevision[]
+
+  @@map("tenant")
+}
+
+model CompanyProfile {
+  tenantId String @id @map("tenant_id")
+  data Json
+  version Int @default(1)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+  @@map("company_profile")
+}
+model Product {
+  id String @id
+  tenantId String @map("tenant_id")
+  data Json
+  version Int @default(1)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+  facts ProductFact[]
+  icps ICP[]
+  @@unique([tenantId,id])
+  @@map("product")
+}
+model ProductFact {
+  id String @id
+  tenantId String @map("tenant_id")
+  productId String @map("product_id")
+  data Json
+  version Int @default(1)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+  product Product @relation(fields:[tenantId,productId],references:[tenantId,id],onDelete:NoAction,onUpdate:NoAction)
+  @@map("product_fact")
+}
+model ICP {
+  id String @id
+  tenantId String @map("tenant_id")
+  productId String @map("product_id")
+  data Json
+  version Int @default(1)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+  product Product @relation(fields:[tenantId,productId],references:[tenantId,id],onDelete:NoAction,onUpdate:NoAction)
+  @@map("icp")
+}
+model ProfileRevision {
+  tenantId String @map("tenant_id")
+  kind String
+  recordId String @map("record_id")
+  version Int
+  data Json
+  actorId String @map("actor_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+  actor User @relation(fields:[actorId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+  @@id([tenantId,kind,recordId,version])
+  @@map("profile_revision")
+}
+
+model Membership {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  userId    String   @map("user_id")
+  role      String   @default("member")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId])
+  @@index([userId])
+  @@map("membership")
+}
+
+model Invitation {
+  id         String    @id @default(uuid())
+  tenantId   String    @map("tenant_id")
+  email      String
+  role       String    @default("member")
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  revokedAt  DateTime?
+  inviterId  String
+  createdAt  DateTime  @default(now())
+  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, email])
+  @@map("invitation")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  actorId   String
+  action    String
+  targetId  String?
+  metadata  Json
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@map("audit_log")
+}
+
+model SupportGrant {
+  id        String @id
+  tenantId  String @map("tenant_id")
+  adminId   String @map("admin_id")
+  grantedBy String @map("granted_by")
+  reason    String
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  tenant Tenant @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
+  admin User @relation("SupportAdmin", fields: [adminId], references: [id], onUpdate: NoAction)
+  approver User @relation("SupportApprover", fields: [grantedBy], references: [id], onUpdate: NoAction)
+  @@map("support_grant")
+}
+
+model TenantPauseRequest {
+  id        String @id
+  tenantId  String @map("tenant_id")
+  status    String @default("pending")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  tenant Tenant @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
+  @@map("tenant_pause_request")
+}
+
+model TenantJob {
+  id String @id
+  tenantId String @map("tenant_id")
+  actorId String @map("actor_id")
+  kind String
+  state String @default("pending")
+  requestHash String @map("request_hash")
+  idempotencyKey String @map("idempotency_key")
+  attempts Int @default(0)
+  leaseToken String? @map("lease_token")
+  leaseUntil DateTime? @map("lease_until") @db.Timestamptz
+  lastError String? @map("last_error")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz
+  tenant Tenant @relation(fields:[tenantId],references:[id],onUpdate:NoAction)
+  actor User @relation(fields:[actorId],references:[id],onUpdate:NoAction)
+  exportFile ExportFile?
+  @@unique([tenantId,idempotencyKey])
+  @@map("tenant_job")
+}
+
+model ExportFile {
+  id String @id
+  tenantId String @map("tenant_id")
+  jobId String @unique @map("job_id")
+  objectKey String @unique @map("object_key")
+  fileName String @map("file_name")
+  mime String
+  size Int
+  sha256 String
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  tenant Tenant @relation(fields:[tenantId],references:[id],onUpdate:NoAction)
+  job TenantJob @relation(fields:[jobId],references:[id],onUpdate:NoAction)
+  @@map("export_file")
+}

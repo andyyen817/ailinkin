@@ -1,0 +1,33 @@
+.contact-review{border-top:1px solid var(--border,#dbe2ea);margin-top:24px;padding-top:20px;min-width:0}
+.contact-review-tools{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+.contact-review-tools label{display:grid;gap:6px;min-width:150px}
+.contact-review-scroll{overflow:auto;max-width:100%;border:1px solid #dbe2ea;border-radius:8px}
+.contact-review table{border-collapse:collapse;width:100%;min-width:960px;font-size:14px}
+.contact-review caption{text-align:left;padding:12px;color:#475569}
+.contact-review th,.contact-review td{padding:12px;vertical-align:top;text-align:left;border-bottom:1px solid #dbe2ea;max-width:270px;overflow-wrap:anywhere}
+.contact-review th{background:#eff4fa;color:#172d4a}
+.contact-review input:not([type=checkbox]),.contact-review select{max-width:100%;padding:8px;border:1px solid #94a3b8;border-radius:5px}
+.contact-review td input:not([type=checkbox]){width:140px;margin-top:8px}
+.contact-review pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;padding:12px;background:#f1f5f9}
+.contact-review button{margin:8px 12px 8px 0}
+@media(max-width:760px){
+  .contact-review table{min-width:0;display:block}.contact-review thead{display:none}.contact-review tbody{display:block}
+  .contact-review caption{display:block;width:100%}
+  .contact-review tr{display:block;padding:10px;border-bottom:2px solid #94a3b8}.contact-review td{display:block;max-width:none;border:0;padding:6px}
+  .contact-review td:before{content:attr(data-label);display:block;font-weight:600;color:#334155;margin-bottom:4px}
+  .contact-review-tools{display:grid}.contact-review-tools input{width:100%}
+}
+.person-research{margin:1rem 0;padding:1rem;border:1px solid #b7c9c5;border-radius:10px;max-width:100%;overflow-wrap:anywhere}
+.search-page .person-research label{display:flex;align-items:flex-start;gap:.5rem;margin:.4rem 0;font-size:13px;font-weight:400}
+.search-page .person-research input[type=checkbox]{width:18px;height:18px;min-height:18px;padding:0;flex:0 0 18px;margin:0}
+.person-research fieldset{display:flex;flex-wrap:wrap;gap:.5rem;margin:.6rem 0;min-width:0}
+.person-research button{margin:.3rem;white-space:normal}
+.contact-result-counts{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px}
+.contact-result-counts p{margin:0;padding:12px;background:#eff4fa;border-radius:8px;display:grid;gap:4px}
+.contact-result-counts strong{font-size:24px;color:#172d4a}
+.contact-batch-results{margin:20px 0}.contact-result-scroll{margin-top:12px;max-height:640px}
+.contact-review .contact-result-scroll table{min-width:0;table-layout:fixed}
+.contact-result-scroll tr[data-outcome=conflict]{background:#fff2cc}.contact-result-scroll tr[data-outcome=missing]{color:#526170}
+.contact-lines{display:block;white-space:pre-line;overflow-wrap:anywhere}.contact-batch-results small{display:block;margin-top:8px}
+.contact-review-history>summary{cursor:pointer;padding:12px;background:#eff4fa}
+@media(max-width:760px){.contact-review .contact-result-scroll table{min-width:0;table-layout:auto}.contact-result-scroll{max-height:none}.contact-result-counts{grid-template-columns:repeat(2,minmax(0,1fr))}}
