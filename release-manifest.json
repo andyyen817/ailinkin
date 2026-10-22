@@ -1,5 +1,5 @@
 {
-  "contentSha": "6b6c218aba43a01aa3138856cae7fde19821b10f0a3b692dc6df605d67aee7ca",
+  "contentSha": "ab8405d533044e5ffe376876e682d035142f35839d35938c2896762ae3827f16",
   "source": {
     ".dockerignore": "2846bbe3033d55aab9db97ec538b239f5d2df70165eb79df678b4e585be358eb",
     "Dockerfile": "418947207688f4e69085799c84603701293434bfd2ba691506ef13f22e9cfd4a",
@@ -155,7 +155,7 @@
     "src/app/api/v1/tenants/[tenantId]/support/route.ts": "b4faa685c9bf062e470f7ff18137c986e11c70518bb08a4660e7cc3b0e613766",
     "src/app/components/account-form.tsx": "02a607b4fce06631d87052bb68b23a5012da8e566d57a74b8c81dcf17fca387a",
     "src/app/components/account-shell.tsx": "ae89c229e09d97037519f9d737ad108bfa324f4ba9efe85c8d47a409d4500383",
-    "src/app/components/audit-exports.tsx": "9c28423013e0d587d8f0b0f8d8a23218f5e2ebd630181a3bcea8002d63ac3079",
+    "src/app/components/audit-exports.tsx": "fc9e3a3f61dfc9afe48ba98daf39e7fe69347ea9838d9311fdd64a425ab162dd",
     "src/app/components/contact-import.tsx": "00a9ce20e73c9ffedaac9ecc7f948674bbe24b2fe449fc7676a50f64f383c0d0",
     "src/app/components/member-management.tsx": "ae169e31fae5929c5348e547849af01af16ef5707b13bca1be53bd129cc9bfee",
     "src/app/contacts/contacts.css": "eae7ca439579aec25d6aff908f85f31a494ef06784336e9ce4f5cf7ca79d013a",
@@ -230,6 +230,7 @@
     "src/domain/discovery-policy.ts": "ef153cefbf46a1a3ab56c2bf7dd773c7970cbeccccb7599530f038bc219f13fa",
     "src/domain/enterprise-market.ts": "59ae93b563b28cc995813b3f7d1394f479d1b293a1ac6ab4ce6b45e47d1867bc",
     "src/domain/enterprise-selection.ts": "3cbbdce94bdace942ec24d5bf719d2e4aafee557a4b003db3d475089024f74d3",
+    "src/domain/export-download.ts": "206672fa0456f2e5a0776820d8a6519c4a283c9f74554d91db2a4e248dc1e8cc",
     "src/domain/market-claims.ts": "c55d8138fb2cad4b388ae33b0084d34778e141fa11d5af17a24dcafce8163b90",
     "src/domain/market-model-output.ts": "c16d8d08099e1f72f3b0aebefcd293203fe522d05f6ffce011e0c8cc58bc004f",
     "src/domain/market-plan-evidence.ts": "41fcf9786ef5e7d4cdcd42e799d18f6f5d98398e603112af15e11f56eafe50e1",
@@ -387,6 +388,7 @@
     "src/worker/contact-import-worker.ts": "5be018c8d5aaaeec651121e5366a40a1139746d08e0d356ad0a8740d61442f8a",
     "src/worker/export-worker.ts": "70da7dae2c73bb43e943c1f110a95b4b3bd45d1858e805381b76b26afdb9f434",
     "src/worker/person-research-worker.ts": "e039ae937e72267aa4d7f59ba7380335aa4cc7bea5b18c41ab44f14292c084dd",
+    "tests/export-download.test.ts": "a0327780636873dc3e35ea813ea88baae60d266e68dbf49285b8945a67722485",
     "tsconfig.json": "331ea13fbe614879b21814af3fe49e605fa11962b7647f1a1b984ab38ea04c85"
   }
 }

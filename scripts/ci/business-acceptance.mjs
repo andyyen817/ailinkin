@@ -89,17 +89,21 @@ async function main() {
       await page.waitForTimeout(1000);
     }
     assert.ok(selected,'NEW_EXPORT_NOT_READY');
+    step='download-retrieve';
     const downloadPromise=page.waitForEvent('download');
     await selected.getByRole('button',{name:'下载 CSV',exact:true}).click();
     const download=await downloadPromise;
-    assert.equal(await download.failure(),null,'DOWNLOAD_FAILED');
+    const downloadError=await download.failure();
+    assert.equal(downloadError,null,/^net::ERR_[A-Z_]+$/.test(downloadError||'')?downloadError:'DOWNLOAD_FAILED');
+    step='download-save';
     const target=path.join(directory,'contacts.csv');await download.saveAs(target);
+    step='download-csv-check';
     const result=checkCsv(fs.readFileSync(target),notes);
     console.log(JSON.stringify({state:'BUSINESS_ACCEPTED',commit:env.GITHUB_SHA,login:true,saved:true,reloaded:true,...result}));
     if(env.GITHUB_STEP_SUMMARY)fs.appendFileSync(env.GITHUB_STEP_SUMMARY,
       `### 正式页面验收通过\n\n账号密码登录、保存、刷新、实际下载均通过。\n\n版本：\`${env.GITHUB_SHA}\`\n\n只修改已标记禁止联系的验收记录。原始客户文件未上传为构建产物。\n`);
   } catch (error) {
-    const failure=error?.name==='TimeoutError'?'TIMEOUT':'CHECK_FAILED';
+    const failure=error?.name==='TimeoutError'?'TIMEOUT':/^net::ERR_[A-Z_]+$/.test(error?.message||'')?error.message:'CHECK_FAILED';
     const pathname=page?new URL(page.url()).pathname:null;
     console.error(JSON.stringify({state:'BUSINESS_ACCEPTANCE_FAILED',step,commit:env.GITHUB_SHA,failure,pathname,loginRequested,loginStatus,loginPageStatus,loginUi,pageErrors}));process.exitCode=1;
   } finally {
