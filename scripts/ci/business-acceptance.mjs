@@ -31,20 +31,26 @@ async function main() {
   const {chromium}=await import('playwright');
   const directory=fs.mkdtempSync(path.join(os.tmpdir(),'search-acceptance-'));
   fs.chmodSync(directory,0o700);
-  let browser,page,step='login',loginStatus=null,loginRequested=false;
+  let browser,page,step='login',loginStatus=null,loginRequested=false,loginPageStatus=null,pageErrors=0,loginUi=null;
   const watchdog=setTimeout(()=>process.exit(1),300000);
   try {
     browser=await chromium.launch({headless:true});
     const context=await browser.newContext({acceptDownloads:true});
     page=await context.newPage();page.setDefaultTimeout(20000);
+    page.on('pageerror',()=>pageErrors++);
     page.on('request',request=>{if(request.url()===origin+'/api/auth/sign-in/email')loginRequested=true;});
     page.on('response',response=>{if(response.url()===origin+'/api/auth/sign-in/email')loginStatus=response.status();});
-    await page.goto(origin+'/login',{waitUntil:'domcontentloaded'});
+    step='login-page';
+    const loginPage=await page.goto(origin+'/login',{waitUntil:'networkidle'});
+    loginPageStatus=loginPage?.status();
+    loginUi={emailInputs:await page.getByLabel('企业邮箱',{exact:true}).count(),submitButtons:await page.getByRole('button',{name:'登录工作台'}).count()};
+    step='login-ready';
     // Wait for a real React interaction before entering credentials or submitting.
     await page.getByRole('button',{name:'显示密码',exact:true}).click();
     await page.getByRole('button',{name:'隐藏密码',exact:true}).waitFor();
     await page.getByRole('button',{name:'隐藏密码',exact:true}).click();
     await page.getByRole('button',{name:'显示密码',exact:true}).waitFor();
+    step='login-submit';
     await page.getByLabel('企业邮箱',{exact:true}).fill('release-check@ailinkin.invalid');
     await page.getByLabel('密码',{exact:true}).fill(env.ACCEPTANCE_PASSWORD);
     await page.getByRole('button',{name:'登录工作台'}).click();
@@ -95,7 +101,7 @@ async function main() {
   } catch (error) {
     const failure=error?.name==='TimeoutError'?'TIMEOUT':'CHECK_FAILED';
     const pathname=page?new URL(page.url()).pathname:null;
-    console.error(JSON.stringify({state:'BUSINESS_ACCEPTANCE_FAILED',step,commit:env.GITHUB_SHA,failure,pathname,loginRequested,loginStatus}));process.exitCode=1;
+    console.error(JSON.stringify({state:'BUSINESS_ACCEPTANCE_FAILED',step,commit:env.GITHUB_SHA,failure,pathname,loginRequested,loginStatus,loginPageStatus,loginUi,pageErrors}));process.exitCode=1;
   } finally {
     clearTimeout(watchdog);await browser?.close();fs.rmSync(directory,{recursive:true,force:true});
   }
