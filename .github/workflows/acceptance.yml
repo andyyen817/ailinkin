@@ -1,0 +1,28 @@
+name: 正式页面业务验收
+on:
+  workflow_call:
+    secrets:
+      ACCEPTANCE_PASSWORD:
+        required: true
+permissions:
+  contents: read
+jobs:
+  browser:
+    if: github.repository == 'andyyen817/ailinkin' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.21.0'
+      - name: 安装验收依赖（此步无生产凭据）
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          node node_modules/playwright/cli.js install --with-deps chromium
+      - name: 真实登录、保存、刷新和下载
+        env:
+          ACCEPTANCE_PASSWORD: ${{ secrets.ACCEPTANCE_PASSWORD }}
+        run: node scripts/ci/business-acceptance.mjs

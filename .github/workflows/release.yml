@@ -1,0 +1,45 @@
+name: 发布到腾讯云
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+  packages: read
+concurrency:
+  group: tencent-customer-search-production
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.repository == 'andyyen817/ailinkin' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.21.0'
+      - name: 选择当前版本已通过的构建
+        id: candidate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/ci/select-release.mjs
+      - name: 发布前确认业务验收已配置
+        env:
+          ACCEPTANCE_PASSWORD: ${{ secrets.TENCENT_SEARCH_ACCEPTANCE_PASSWORD }}
+        run: node -e "if(!process.env.ACCEPTANCE_PASSWORD)throw Error('BROWSER_ACCEPTANCE_NOT_CONFIGURED')"
+      - name: 发布既有网页和导入导出后台
+        env:
+          RELEASE_PRIVATE_KEY: ${{ secrets.TENCENT_SEARCH_RELEASE_KEY }}
+          RELEASE_HOST_KEY: ${{ vars.TENCENT_SEARCH_HOST_KEY }}
+          RELEASE_IMAGE: ${{ steps.candidate.outputs.image }}
+          RELEASE_CI_RUN: ${{ steps.candidate.outputs.ciRun }}
+          RELEASE_CI_ATTEMPT: ${{ steps.candidate.outputs.ciAttempt }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/ci/request-release.mjs
+  business-acceptance:
+    needs: release
+    uses: ./.github/workflows/acceptance.yml
+    secrets:
+      ACCEPTANCE_PASSWORD: ${{ secrets.TENCENT_SEARCH_ACCEPTANCE_PASSWORD }}
