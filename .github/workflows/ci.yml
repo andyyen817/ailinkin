@@ -1,0 +1,62 @@
+name: 自动测试与构建
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test-build:
+    if: github.repository == 'andyyen817/ailinkin' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      APP_RUNTIME_ENABLED: 'false'
+      WORKERS_ENABLED: 'false'
+      MAIL_SENDING_ENABLED: 'false'
+      NEXT_TELEMETRY_DISABLED: '1'
+      CHECKPOINT_DISABLE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.21.0'
+      - name: 核对源码范围和凭据隔离
+        id: source
+        run: node scripts/ci/verify-publish-source.mjs
+      - name: 安装锁定依赖
+        run: npm ci --no-audit --no-fund
+      - name: 客户与权限回归测试
+        run: npm test
+      - name: 构建网页和后台并检查类型
+        run: |
+          npm run build
+          node scripts/build-worker.mjs
+          node node_modules/typescript/bin/tsc --noEmit --incremental false
+      - name: 构建和检查 Linux 镜像
+        env:
+          SOURCE_HASH: ${{ steps.source.outputs.content_sha }}
+        run: |
+          set -euo pipefail
+          IMAGE="ghcr.io/andyyen817/ailinkin:sha-${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker build --label "org.opencontainers.image.source=https://github.com/andyyen817/ailinkin" --label "org.opencontainers.image.revision=$GITHUB_SHA" --label "io.vaneapex.source=$SOURCE_HASH" -t "$IMAGE" .
+          test "$(docker image inspect "$IMAGE" --format '{{.Config.User}}')" = node
+          docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges --entrypoint node "$IMAGE" -e "const fs=require('fs'),a=require('assert/strict');a.equal(process.getuid(),1000);for(const p of ['.next/standalone/server.js','dist/worker.mjs'])a.ok(fs.statSync('/app/'+p).size>0);for(const k of ['APP_RUNTIME_ENABLED','WORKERS_ENABLED','MAIL_SENDING_ENABLED'])a.equal(process.env[k],'false')"
+          printf 'RELEASE_IMAGE=%s\n' "$IMAGE" >> "$GITHUB_ENV"
+      - name: 保存构建镜像（不发布网站）
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push "$RELEASE_IMAGE"
+          docker logout ghcr.io
+          printf '### 测试与构建通过，尚未发布\n\n提交：`%s`\n\n镜像：`%s`\n\n下一步：打开「发布到腾讯云」工作流，点击运行。\n' "$GITHUB_SHA" "$RELEASE_IMAGE" >> "$GITHUB_STEP_SUMMARY"
