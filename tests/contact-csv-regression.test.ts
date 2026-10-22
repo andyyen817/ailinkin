@@ -7,7 +7,7 @@ import {exportContactsCsv,mapContactCsv,parseContactCsv} from '../src/domain/con
 test('CSV multiline notes stay in one record for common CSV readers',()=>{
  const rows=stages.flatMap(stage=>['first\nsecond','first\rsecond','first\r\nsecond','"quotes", commas','中文\n换行'].map(notes=>contactSchema.parse({name:'Regression',company:'Factory',notes,stage,doNotContact:true,notInterested:true})));
  const csv=exportContactsCsv(rows);
- const cells=parse(csv,{bom:true,columns:true,record_delimiter:['\r\n','\n','\r']});
+ const cells=parse<Record<string,string>>(csv,{bom:true,columns:true,record_delimiter:['\r\n','\n','\r']});
  assert.equal(cells.length,rows.length);
  for(let i=0;i<rows.length;i++){
   assert.equal(cells[i].notes,rows[i].notes);assert.equal(cells[i].stage,rows[i].stage);
