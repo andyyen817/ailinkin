@@ -78,17 +78,14 @@ async function main() {
     assert.equal(await page.getByRole('textbox',{name:'备注',exact:true}).inputValue(),notes);
     await page.getByRole('button',{name:'关闭编辑',exact:true}).click();
     step='download';
-    const existing=await page.locator('[data-job-id]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-job-id')));
+    const createdPromise=page.waitForResponse(response=>response.url()===origin+'/api/v1/tenants/'+tenant+'/exports' && response.request().method()==='POST');
     await page.getByRole('button',{name:'生成客户 CSV',exact:true}).click();
-    await page.waitForFunction(ids=>Array.from(document.querySelectorAll('[data-job-id]')).some(n=>!ids.includes(n.getAttribute('data-job-id'))),existing);
-    const fresh=page.locator('[data-job-id]').filter({has:page.getByRole('button',{name:'下载 CSV',exact:true})});
-    let selected;
-    for(let attempt=0;attempt<40;attempt++) {
-      for(const item of await fresh.all())if(!existing.includes(await item.getAttribute('data-job-id')))selected=item;
-      if(selected)break;
-      await page.waitForTimeout(1000);
-    }
-    assert.ok(selected,'NEW_EXPORT_NOT_READY');
+    const created=await createdPromise;
+    assert.equal(created.status(),202,'EXPORT_NOT_CREATED');
+    const {jobId}=await created.json();
+    assert.match(jobId,/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,'INVALID_EXPORT_JOB');
+    const selected=page.locator(`[data-job-id="${jobId}"]`);
+    await selected.getByRole('button',{name:'下载 CSV',exact:true}).waitFor({state:'visible',timeout:40000});
     step='download-retrieve';
     const downloadPromise=page.waitForEvent('download');
     await selected.getByRole('button',{name:'下载 CSV',exact:true}).click();
