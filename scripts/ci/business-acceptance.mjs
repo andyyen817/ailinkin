@@ -38,7 +38,7 @@ async function main() {
     const context=await browser.newContext({acceptDownloads:true});
     const page=await context.newPage();page.setDefaultTimeout(20000);
     await page.goto(origin+'/login',{waitUntil:'domcontentloaded'});
-    await page.getByLabel('企业邮箱',{exact:true}).fill('admin@qq.com');
+    await page.getByLabel('企业邮箱',{exact:true}).fill('release-check@ailinkin.invalid');
     await page.getByLabel('密码',{exact:true}).fill(env.ACCEPTANCE_PASSWORD);
     await page.getByRole('button',{name:'登录工作台'}).click();
     await page.waitForURL(origin+'/workspace');
