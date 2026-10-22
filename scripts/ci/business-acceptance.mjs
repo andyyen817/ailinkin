@@ -8,6 +8,12 @@ import {parse} from 'csv-parse/sync';
 const origin='https://aicustomersearch.vaneapex.cn';
 const tenant='6e0df94e-71cc-4291-9e8c-7a49b39e02b7';
 const name='自动验收20261021-1811',email='qa-20261021-1811@example.invalid';
+async function bounded(operation,milliseconds) {
+  let timer;
+  try {return await Promise.race([operation,new Promise((_,reject)=>{
+    timer=setTimeout(()=>reject(Object.assign(new Error('WAIT_TIMEOUT'),{name:'TimeoutError'})),milliseconds);
+  })]);} finally {clearTimeout(timer);}
+}
 export function checkCsv(bytes,notes) {
   assert.ok(bytes.length>0 && bytes.length<=1048576,'EXPORT_SIZE');
   const rows=parse(bytes,{columns:true,bom:true,skip_empty_lines:true});
@@ -32,7 +38,12 @@ async function main() {
   const directory=fs.mkdtempSync(path.join(os.tmpdir(),'search-acceptance-'));
   fs.chmodSync(directory,0o700);
   let browser,page,step='login',loginStatus=null,loginRequested=false,loginPageStatus=null,pageErrors=0,loginUi=null;
-  const watchdog=setTimeout(()=>process.exit(1),300000);
+  const began=Date.now();
+  const markStep=value=>{step=value;console.log(JSON.stringify({state:'ACCEPTANCE_STAGE',step,elapsedMs:Date.now()-began}));};
+  const watchdog=setTimeout(()=>{
+    console.error(JSON.stringify({state:'BUSINESS_ACCEPTANCE_FAILED',step,commit:env.GITHUB_SHA,
+      failure:'TOTAL_TIMEOUT',loginRequested,loginStatus,pageErrors}));process.exit(1);
+  },300000);
   try {
     browser=await chromium.launch({headless:true});
     const context=await browser.newContext({acceptDownloads:true});
@@ -40,22 +51,22 @@ async function main() {
     page.on('pageerror',()=>pageErrors++);
     page.on('request',request=>{if(request.url()===origin+'/api/auth/sign-in/email')loginRequested=true;});
     page.on('response',response=>{if(response.url()===origin+'/api/auth/sign-in/email')loginStatus=response.status();});
-    step='login-page';
+    markStep('login-page');
     const loginPage=await page.goto(origin+'/login',{waitUntil:'networkidle'});
     loginPageStatus=loginPage?.status();
     loginUi={emailInputs:await page.getByLabel('企业邮箱',{exact:true}).count(),submitButtons:await page.getByRole('button',{name:'登录工作台'}).count()};
-    step='login-ready';
+    markStep('login-ready');
     // Wait for a real React interaction before entering credentials or submitting.
     await page.getByRole('button',{name:'显示密码',exact:true}).click();
     await page.getByRole('button',{name:'隐藏密码',exact:true}).waitFor();
     await page.getByRole('button',{name:'隐藏密码',exact:true}).click();
     await page.getByRole('button',{name:'显示密码',exact:true}).waitFor();
-    step='login-submit';
+    markStep('login-submit');
     await page.getByLabel('企业邮箱',{exact:true}).fill('release-check@ailinkin.invalid');
     await page.getByLabel('密码',{exact:true}).fill(env.ACCEPTANCE_PASSWORD);
     await page.getByRole('button',{name:'登录工作台'}).click();
     await page.waitForURL(origin+'/workspace');
-    step='save';
+    markStep('save');
     await page.goto(origin+'/contacts?tenantId='+tenant,{waitUntil:'domcontentloaded'});
     await page.getByRole('textbox',{name:'搜索客户',exact:true}).fill(email);
     await page.getByRole('button',{name:'筛选',exact:true}).click();
@@ -73,28 +84,31 @@ async function main() {
     await page.getByRole('checkbox',{name:'不感兴趣',exact:true}).check();
     await page.getByRole('button',{name:'保存客户',exact:true}).click();
     await page.getByRole('status').filter({hasText:'客户已保存。'}).waitFor();
-    step='reload';await page.reload({waitUntil:'domcontentloaded'});
+    markStep('reload');await page.reload({waitUntil:'domcontentloaded'});
     await page.getByRole('button',{name:'编辑 '+name,exact:true}).click();
     assert.equal(await page.getByRole('textbox',{name:'备注',exact:true}).inputValue(),notes);
     await page.getByRole('button',{name:'关闭编辑',exact:true}).click();
-    step='download';
+    markStep('download');
     const createdPromise=page.waitForResponse(response=>response.url()===origin+'/api/v1/tenants/'+tenant+'/exports' && response.request().method()==='POST');
     await page.getByRole('button',{name:'生成客户 CSV',exact:true}).click();
     const created=await createdPromise;
     assert.equal(created.status(),202,'EXPORT_NOT_CREATED');
-    const {jobId}=await created.json();
+    markStep('download-job-response');
+    const {jobId}=await bounded(created.json(),15000);
     assert.match(jobId,/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,'INVALID_EXPORT_JOB');
     const selected=page.locator(`[data-job-id="${jobId}"]`);
+    markStep('download-job-visible');
     await selected.getByRole('button',{name:'下载 CSV',exact:true}).waitFor({state:'visible',timeout:40000});
-    step='download-retrieve';
+    markStep('download-retrieve');
     const downloadPromise=page.waitForEvent('download');
     await selected.getByRole('button',{name:'下载 CSV',exact:true}).click();
     const download=await downloadPromise;
-    const downloadError=await download.failure();
+    markStep('download-completion');
+    const downloadError=await bounded(download.failure(),30000);
     assert.equal(downloadError,null,/^net::ERR_[A-Z_]+$/.test(downloadError||'')?downloadError:'DOWNLOAD_FAILED');
-    step='download-save';
-    const target=path.join(directory,'contacts.csv');await download.saveAs(target);
-    step='download-csv-check';
+    markStep('download-save');
+    const target=path.join(directory,'contacts.csv');await bounded(download.saveAs(target),30000);
+    markStep('download-csv-check');
     const result=checkCsv(fs.readFileSync(target),notes);
     console.log(JSON.stringify({state:'BUSINESS_ACCEPTED',commit:env.GITHUB_SHA,login:true,saved:true,reloaded:true,...result}));
     if(env.GITHUB_STEP_SUMMARY)fs.appendFileSync(env.GITHUB_STEP_SUMMARY,
@@ -104,7 +118,9 @@ async function main() {
     const pathname=page?new URL(page.url()).pathname:null;
     console.error(JSON.stringify({state:'BUSINESS_ACCEPTANCE_FAILED',step,commit:env.GITHUB_SHA,failure,pathname,loginRequested,loginStatus,loginPageStatus,loginUi,pageErrors}));process.exitCode=1;
   } finally {
-    clearTimeout(watchdog);await browser?.close();fs.rmSync(directory,{recursive:true,force:true});
+    try {await bounded(browser?.close(),10000);} catch {
+      console.error(JSON.stringify({state:'ACCEPTANCE_CLEANUP_FAILED',step,commit:env.GITHUB_SHA}));process.exitCode=1;
+    } finally {clearTimeout(watchdog);fs.rmSync(directory,{recursive:true,force:true});}
   }
 }
 if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href)await main();
