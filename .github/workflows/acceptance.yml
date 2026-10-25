@@ -22,10 +22,14 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22.21.0'
-      - name: 安装验收依赖（此步无生产凭据）
+      - name: 安装验收浏览器（此步无生产凭据）
+        timeout-minutes: 5
+        env:
+          PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT: '60000'
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
-          node node_modules/playwright/cli.js install --with-deps chromium
+          node node_modules/playwright/cli.js install --only-shell chromium
+          node --input-type=module -e "const {chromium}=await import('playwright');const browser=await chromium.launch();await browser.close()"
       - name: 真实登录、保存、刷新和下载
         env:
           ACCEPTANCE_PASSWORD: ${{ secrets.ACCEPTANCE_PASSWORD || secrets.TENCENT_SEARCH_ACCEPTANCE_PASSWORD }}
