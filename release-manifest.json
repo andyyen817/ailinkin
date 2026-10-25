@@ -1,5 +1,5 @@
 {
-  "contentSha": "ab8405d533044e5ffe376876e682d035142f35839d35938c2896762ae3827f16",
+  "contentSha": "aaa7856859efd7749727bfdf508c37f9a3b276163ead9f07324ff6a8c1022933",
   "source": {
     ".dockerignore": "2846bbe3033d55aab9db97ec538b239f5d2df70165eb79df678b4e585be358eb",
     "Dockerfile": "418947207688f4e69085799c84603701293434bfd2ba691506ef13f22e9cfd4a",
@@ -179,7 +179,7 @@
     "src/app/profiles/market-research.css": "c791d29be8881ef068182574b4735b6cdf8b463c6679c7e3c8fbcef243702239",
     "src/app/profiles/page.tsx": "5c4137dc063fedd928fe102d0555b3ee7fb53d98efd688cad95238bcd8cc991b",
     "src/app/profiles/profiles.css": "1e3f1caa2333e4dfcf57005e941d054073d78a180e7c4da391e260268d572d68",
-    "src/app/prospecting/page.tsx": "4cfc872f0137a9058fb640b83d81b6c4f63f8697d816dcca5a8cf28369d22b1f",
+    "src/app/prospecting/page.tsx": "52fcf932fdebe7f15afd4d120ec70dd3d22bc56049fe915300eaa4aba9945559",
     "src/app/reset-password/page.tsx": "073c09284e54509bdd4682bdc61358a9a07ea815621bfc7568c14c0e76b6a369",
     "src/app/search/browser-contact-panel.tsx": "1251bc502e6c2954651c852e6067398d6278492065ac53e8f4e447c92b7f090a",
     "src/app/search/company-path-panel.tsx": "57e75b4fa255d0ed4b0f30eda062810a6185cab7d2023cf6fbdd0daab0ab1169",
@@ -198,11 +198,11 @@
     "src/app/search/enterprise-selection.css": "3ce446a13a1010d542123cc67efaf079b435e4f287f6b40f14e2a749597d0cbd",
     "src/app/search/entity-pipeline-panel.tsx": "18a130b187f094ac5e3e7488ca15d0d45f0474dd2f26bfb89d3999e8c59cfa45",
     "src/app/search/marketing-mail-panel.tsx": "a772dace877a87410c1ac3a3d6159be963035d0127afac9a1161c47092d1a64c",
-    "src/app/search/operator-batch-panel.tsx": "1383c6730c39a4deafd5a1c95546cf5d608493009d9cc830a17e45037ddac218",
-    "src/app/search/operator-batch.css": "7986c7b3aae7404a92561b560f9b3fefa6467776a285a6c0d6ef7c0d0e4d0f6b",
+    "src/app/search/operator-batch-panel.tsx": "397154d23f7f32ed409ec6da88cbc6ca64270004f1411fa91cf872173d6b2a85",
+    "src/app/search/operator-batch.css": "22f89259144ed726241ee6ce028711e83af803111bf29c668c0219c00e9bf2ca",
     "src/app/search/operator-crm-panel.tsx": "15d4fa5723b0ce86f19897c0d45260efec0cc3f49e7b1bad11038e06a85802ac",
     "src/app/search/operator-direction-results.tsx": "c4d6002a97581a9201581db9b58b38eda84d6b56e236401ce1b321112537fbca",
-    "src/app/search/operator-free-grant.tsx": "d67276c85a1a1699028d2f33f638dd96e54547248d85992396acf575a31347c6",
+    "src/app/search/operator-free-grant.tsx": "24a7c6894ec838e1dc7db43379c975b518762b2b90b6886bdf450bfafde31199",
     "src/app/search/page.tsx": "d554b133f1ec04ade4e642178bb1dd45de6b0b11efa6ff9b9700fa3b249ef233",
     "src/app/search/person-research-panel.tsx": "99add7d688687e995d7e5a1c5d7a1332e83cf49505f58c55a4faeba7fe23cbb4",
     "src/app/search/quality-panel.tsx": "12a02744f7ad973b24bfb6075d493decf68be88edddc17a01a6d8a79cf3d2de2",
@@ -212,7 +212,7 @@
     "src/app/search/social-contact-panel.tsx": "a7f87dcddd0d24366a745d46693a03d823e5fe352c67b1a68582f3d1de7b59d2",
     "src/app/security/setup/page.tsx": "2f757249ef89ed32a02ef8f016b193cb66017c5b2e2fb9c2b952b43c02892829",
     "src/app/security/verify/page.tsx": "bdd880e06750e629ecfe1655a47b911f9e7d748dee31241268f3ce6480543c0e",
-    "src/app/workspace/page.tsx": "8968caddbca90f321af535fca4eeb5f2aeb4d9b6a6c36fcfa6840a60631e87c8",
+    "src/app/workspace/page.tsx": "c7c08ddb2ec322b468c1948ab67e63f8e5f7a331efa87ee7369627781341f567",
     "src/domain/browser-contact.ts": "07b43d76a0fca115604489f770ea74b8834b76a6b5fbaecf1a614ea4dd01d6dd",
     "src/domain/company-analysis-selection.ts": "8510a3f2d39dd52e3cb943c6fe0068decf27fa6265ec21cfebe4d2ee8d654b1f",
     "src/domain/company-analysis.ts": "037da4aaf0057d1281536486a85d93118a390b122734505b64f6ff3194c3cc33",
@@ -389,6 +389,7 @@
     "src/worker/export-worker.ts": "70da7dae2c73bb43e943c1f110a95b4b3bd45d1858e805381b76b26afdb9f434",
     "src/worker/person-research-worker.ts": "e039ae937e72267aa4d7f59ba7380335aa4cc7bea5b18c41ab44f14292c084dd",
     "tests/export-download.test.ts": "a0327780636873dc3e35ea813ea88baae60d266e68dbf49285b8945a67722485",
-    "tsconfig.json": "331ea13fbe614879b21814af3fe49e605fa11962b7647f1a1b984ab38ea04c85"
+    "tsconfig.json": "331ea13fbe614879b21814af3fe49e605fa11962b7647f1a1b984ab38ea04c85",
+    "src/app/prospecting/prospecting.css": "b9729e90847b6484ee380d30f38b42d64bdc1d0ea4830cc7c7dcb2fa66a122a0"
   }
 }

@@ -1,0 +1,32 @@
+.novice-actions { display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin-top:24px; }
+.novice-actions .primary { text-decoration:none; min-width:180px; }
+.novice-secondary { padding:14px 18px; border:1px solid var(--line); border-radius:8px; color:var(--green); }
+.novice-text { border:0; background:transparent; color:var(--muted); padding:10px 0; font:inherit; font-size:13px; }
+.novice-advanced { margin:20px 0; border-top:1px solid var(--line); padding-top:16px; }
+.novice-advanced summary { cursor:pointer; color:var(--green); font-size:14px; }
+.novice-advanced label { margin:16px 0; }
+.novice-more { position:relative; }
+.novice-more a { display:block; margin:12px 0; white-space:nowrap; }
+.prospecting-page { max-width:1180px; }
+.prospecting-page .workspace-intro { margin-bottom:28px; }
+.prospecting-page .workspace-intro p { color:var(--muted); }
+.prospecting-switcher { display:flex; gap:12px; align-items:end; padding:20px; background:var(--surface); border-radius:12px; }
+.prospecting-switcher label { flex:1; }
+.prospecting-switcher button { min-height:43px; }
+.direction-form { background:white; margin:24px 0; }
+.direction-form h2 { font-size:22px; margin:0 0 24px; }
+.direction-form fieldset { border:0; margin:0; padding:0; min-width:0; }
+.direction-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+.direction-form label { font-size:14px; }
+.direction-form .muted { margin:20px 0; }
+.direction-summary { padding:24px 0 8px; }
+.direction-summary h2 { font-size:22px; margin:0; }
+.direction-summary p { margin:8px 0 16px; color:var(--muted); font-size:14px; }
+@media(max-width:700px) {
+  .direction-fields { grid-template-columns:1fr; }
+  .prospecting-switcher { flex-wrap:wrap; }
+  .prospecting-switcher label { flex-basis:100%; }
+  .novice-actions { align-items:stretch; flex-direction:column; }
+  .novice-actions .primary { margin:0; }
+  .direction-form { padding:20px; }
+}

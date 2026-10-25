@@ -19,9 +19,9 @@ export function OperatorBatchPanel({tenantId,campaignId,owner}:{tenantId:string;
     try{const r=await fetch(base+(action==='authorize_enrichment'&&extra.grant?.method==='trace_v2'?'/trace':''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({campaignId,action,...(action==='create'?{companyIds,finder,verify}:['authorize','authorize_enrichment'].includes(action)?{}:batch?{batchId:batch.id}:{}),...extra})}),data=await r.json();if(!r.ok)throw Error(messages[data.error]||'操作未完成，请刷新后查看已保存进度。');setView(data);if(['authorize','authorize_enrichment'].includes(action))setChosenBatch('');setMessage(action==='refresh_export'?(data.batches?.find((b:any)=>b.id===batch?.id)?.state==='done'?'总表已更新，可下载；没有新增查询。':'正在使用已保存资料更新总表，不新增查询。'):['create','authorize','authorize_enrichment'].includes(action)?'批次已保存，正在核对免费余额。':action==='confirm'||action==='select'?'已开始自动执行，可离开本页后回来查看。':action==='pause'?'已申请暂停，当前请求保存回执后停止。':'已从保存位置继续。');}catch(e){setMessage((e as Error).message);}finally{setBusy(false);}
   }
   const people=(batch?.people||[]).filter((p:any)=>filter==='全部'||p.status===filter),statuses=[...new Set<string>((batch?.people||[]).map((p:any)=>p.status))];
+  const noFreeSource=batch?.state==='confirm'&&batch.mode!=='people_enrichment'&&batch.accounts?.prospeo?.remaining===0;
   return <section id="operator-batch" className="search-panel operator-batch" aria-label="运营一键跑批" aria-busy={busy}>
-    <div className="operator-heading"><div><h2>运营一键跑批</h2><p>选企业、确认免费限额，其余步骤自动完成。</p></div><span className="operator-free">现金支出 ¥0 · 暂不发信</span></div>
-    <ol className="operator-steps"><li>创建批次</li><li>核对免费余额并确认</li><li>采集、补邮箱、验证</li><li>保存并生成总表</li></ol>
+    <div className="operator-heading"><div><h2>查找进度与结果</h2><p>先核对额度，再选企业查联系人；审核后加入客户库。</p></div><span className="operator-free">现金支出 ¥0 · 暂不发信</span></div>
     {view?.selfService&&<ContactEnrichmentForm view={view} busy={busy} owner={owner} active={!!active} onAuthorize={value=>void act('authorize_enrichment',value)}/>}
     {view?.selfService&&!active&&(view.batches.some((b:any)=>b.selfService&&b.state==='done'&&b.people?.length)?<details><summary>继续采集新企业（可选）</summary><OperatorFreeGrant busy={busy} owner={owner} onAuthorize={grant=>void act('authorize',{grant})}/></details>:<OperatorFreeGrant busy={busy} owner={owner} onAuthorize={grant=>void act('authorize',{grant})}/>)}
     {!view?.selfService&&<fieldset disabled={busy||!owner||!!active||!view?.available}><legend>本批采集范围</legend>
@@ -34,17 +34,21 @@ export function OperatorBatchPanel({tenantId,campaignId,owner}:{tenantId:string;
     <p role="status" aria-live="polite">{message}</p>
     {batch&&<div className="operator-result">
       {view?.batches.length>1&&<label>查看批次<select value={batch.id} onChange={e=>{setChosenBatch(e.target.value);setFilter('全部');}}>{view.batches.map((b:any)=><option value={b.id} key={b.id}>{new Date(b.createdAt).toLocaleString('zh-CN')} · {b.status}</option>)}</select></label>}
-      <div className="operator-heading"><h3>{batch.status}</h3><span>累计失败／未知 {batch.failures} 次（保留历史）</span></div>
+      <div className="operator-heading"><h3>{noFreeSource?'免费额度不足，尚未开始采集':batch.status}</h3></div>
+      <div className="operator-summary" aria-label="本批实际结果"><div><span>企业候选</span><strong>{batch.companyChoices?.length??batch.targets?.length??0}</strong></div><div><span>已取得联系人</span><strong>{batch.people.length}</strong></div><div><span>邮箱候选（不等于已核实）</span><strong>{batch.people.filter((p:any)=>p.email).length}</strong></div></div>
+      {noFreeSource&&<div className="operator-empty-credit" role="status"><strong>查找来源的免费余额为 0，本批无法开始。</strong><p>方向和历史已保存。免费额度恢复后，重新确认限额；如需购买额度，先由负责人批准。当前没有新增客户。</p><a href={`/contacts?tenantId=${tenantId}`}>先查看客户库与已有下载 →</a></div>}
+      <details className="operator-audit"><summary>用量、免费余额与失败记录（失败／未知 {batch.failures} 次）</summary>
       <p>已用：采集 {batch.usage.pages} 页 · 补邮箱 {batch.usage.finder} 次 · 验证 {batch.usage.verify} 次 · 核额 {batch.usage.accounts} 次</p>
       {batch.creditLimits&&<p>积分已用或预留：Prospeo {batch.creditsReserved.prospeo}／{batch.creditLimits.prospeo}，Hunter {batch.creditsReserved.hunter}／{batch.creditLimits.hunter}。最终使用量以采集后账户余额为准。</p>}
       {batch.dailyLimit&&<p>每日请求参考余量 {batch.dailyLimit.remaining} 次（已保存回执）；本轮最新回执剩余 {batch.currentDailyRemaining??'尚待首条查询确认'}。次数不足会保留其余人物未查询。</p>}
       {batch.accounts&&<p>采集前免费余额：Prospeo {batch.accounts.prospeo?.remaining??'未确认'} 积分；Hunter {batch.accounts.hunter?.remaining??'未确认'} 积分。</p>}
       {batch.finalAccounts&&<p>采集后免费余额：Prospeo {batch.finalAccounts.prospeo?.remaining??'未确认'} 积分；Hunter {batch.finalAccounts.hunter?.remaining??'未确认'} 积分。</p>}
-      {batch.state==='confirm'&&<div className="operator-confirm"><strong>请确认本批免费限额</strong><p>{batch.mode==='people_enrichment'?`仅补全已保存的 ${batch.people.length} 人；公开搜索最多 ${batch.limits.searches} 次、正文读取最多 ${batch.limits.publicPages} 次、网页HTTP最多 ${batch.limits.network} 次；`:`读取最多 ${batch.limits.pages} 页、`}补邮箱最多 {batch.limits.finder} 人、验证最多 {batch.limits.verify} 个新邮箱。仅使用上述免费余额；不足自动缩减，无法确认免费则停止。执行最长60分钟，并受本轮授权截止时间限制。</p><button disabled={busy||!owner||!view.available} onClick={()=>void act('confirm')}>确认免费限额并开始</button></div>}
+      </details>
+      {batch.state==='confirm'&&!noFreeSource&&<div className="operator-confirm"><strong>核对本批范围，确认后开始</strong><p>{batch.mode==='people_enrichment'?`仅补全已保存的 ${batch.people.length} 人；公开搜索最多 ${batch.limits.searches} 次、正文读取最多 ${batch.limits.publicPages} 次、网页HTTP最多 ${batch.limits.network} 次；`:`最多查询 ${batch.limits.pages} 家企业的联系人、`}补邮箱最多 {batch.limits.finder} 人、验证最多 {batch.limits.verify} 个新邮箱。仅使用已核实的免费余额；不足自动缩减，无法确认免费则停止。执行最长60分钟，并受本轮授权截止时间限制。</p><button className="primary" disabled={busy||!owner||!view.available} onClick={()=>void act('confirm')}>确认免费限额并开始</button></div>}
       {['checking','running','exporting'].includes(batch.state)&&<button disabled={busy||!owner||batch.pauseRequested} onClick={()=>void act('pause')}>{batch.pauseRequested?'正在保存后暂停':'暂停本批'}</button>}
       {batch.state==='paused'&&<button disabled={busy||!owner} onClick={()=>void act('resume')}>从保存位置继续</button>}
       {batch.reason&&<p className="search-message">{messages[batch.reason]||batch.reason}</p>}
-      {batch.selfService&&batch.mode!=='people_enrichment'&&<OperatorDirectionResults batch={batch} busy={busy} owner={owner} onSelect={companyIds=>void act('select',{companyIds})}/>}
+      {batch.selfService&&batch.mode!=='people_enrichment'&&!['checking','confirm'].includes(batch.state)&&<OperatorDirectionResults batch={batch} busy={busy} owner={owner} onSelect={companyIds=>void act('select',{companyIds})}/>}
       {batch.exportReady&&<a className="operator-download" href={`${base}?campaignId=${campaignId}&download=${batch.id}`}>{batch.selfService?'下载本批个人联系方式总表':'下载更新后的三家个人联系方式总表'}</a>}
       {batch.exportReady&&batch.scopeId===view?.scopeId&&<button disabled={busy||!owner} onClick={()=>void act('refresh_export')}>按已保存资料更新总表（不新增查询）</button>}
       {batch.mode==='people_enrichment'&&<ContactEnrichmentResults batch={batch}/>}

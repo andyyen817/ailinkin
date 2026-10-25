@@ -31,3 +31,23 @@
 .operator-crm th { background: #f0f6f3; position: sticky; top: 0; }
 .operator-crm td input { width: auto; }
 .operator-crm a { text-decoration: underline; }
+.operator-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:20px 0; }
+.operator-summary>div { background:var(--surface); padding:18px; border-radius:10px; }
+.operator-summary span { display:block; color:var(--muted); font-size:13px; }
+.operator-summary strong { display:block; font-size:30px; margin-top:8px; }
+.operator-empty-credit { background:#fff8e7; border:1px solid #ecd7a7; padding:20px; border-radius:10px; margin:20px 0; }
+.operator-empty-credit a { color:var(--green); text-decoration:underline; font-size:14px; }
+.operator-audit { margin:20px 0; padding:14px 0; border-top:1px solid var(--line); }
+.operator-confirm fieldset { min-width:0; border:0; padding:0; }
+.operator-confirm .operator-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start; }
+.operator-confirm .operator-options label { display:grid; align-items:start; font-size:13px; }
+.operator-confirm .operator-options input { width:100%; }
+.operator-confirm label:has(input[type=checkbox]) { display:flex; align-items:flex-start; line-height:1.8; margin:18px 0; }
+.operator-confirm input[type=checkbox] { width:18px; min-height:18px; height:18px; flex:0 0 18px; margin-top:2px; }
+.operator-confirm .primary { justify-content:center; height:auto; min-height:49px; text-align:center; }
+@media(max-width:600px) {
+  .operator-confirm .operator-options { grid-template-columns:1fr; }
+  .operator-summary { gap:6px; }
+  .operator-summary>div { padding:12px 8px; }
+  .operator-summary span { font-size:12px; }
+}
